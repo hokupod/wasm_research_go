@@ -5,17 +5,32 @@
     <style type="text/css">
 
     </style>
-    <script type="text/javascript">
-    const wasm = '/add_cookie/js/wasm_research.wasm'
-    fetch(wasm)
-        .then(response => response.arrayBuffer())
-        .then(bytes => WebAssembly.instantiate(bytes, {}))
-        .then(results => {
-            console.log(results.instance.exports.add(1, 2))
-            results.instance.exports.send()
-    })
+    <script src="/add_cookie/js/wasm_exec.js"></script>
+    <script>
+        if (!WebAssembly.instantiateStreaming) { // polyfill
+            WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                const source = await (await resp).arrayBuffer();
+                return await WebAssembly.instantiate(source, importObject);
+            };
+        }
+
+        const go = new Go();
+        let mod, inst;
+        WebAssembly.instantiateStreaming(fetch("/add_cookie/js/main.wasm"), go.importObject).then((result) => {
+            mod = result.module;
+            inst = result.instance;
+            document.getElementById("runButton").disabled = false;
+        }).catch((err) => {
+            console.error(err);
+        });
+
+        async function run() {
+            console.clear();
+            await go.run(inst);
+            inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
+        }
     </script>
-    <input type="button" onClick="greet()">
+    <input type="button" onClick="run()" id="runButton" disabled>
 
 
 </head>
