@@ -15,6 +15,7 @@
         }
 
         const go = new Go();
+        go.argv.push(".example.com");
         let mod, inst;
         WebAssembly.instantiateStreaming(fetch("/add_cookie/js/main.wasm"), go.importObject).then((result) => {
             mod = result.module;
@@ -30,7 +31,7 @@
             inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
         }
     </script>
-    <input type="button" onClick="run()" id="runButton" disabled>
+    <input type="button" onClick="run()" id="runButton" value="Set Cookie!" disabled>
 
 
 </head>
